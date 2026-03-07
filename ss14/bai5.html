@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form id="product-form">
+        <input type="text" id="product-name" placeholder="Tên sản phẩm">
+        <input type="number" id="product-price" placeholder="Giá(VND)">
+        <button type="submit" id="addBtn">Thêm Sản Phẩm</button>
+        <input type="text" id="search-input" placeholder="Tìm kiếm sản phẩm...">
+    </form>
+    <ul id="product-list"></ul>
+    <script>
+        const productForm = document.getElementById("product-form");
+        const nameProduct = document.getElementById("product-name");
+        const priceProduct = document.getElementById("product-price");
+        const addBtn = document.getElementById("addBtn");
+        const productList = document.getElementById("product-list");
+
+        addBtn.addEventListener(`click`,taskList)
+
+        function taskList(e) {
+        e.preventDefault();
+            let nameInput = nameProduct.value;
+            let priceInput = priceProduct.value;
+            let newTast = {
+                name: nameInput,
+                price: priceInput
+            }
+            const li = document.createElement("li");
+            li.classList.add("product-item");
+            li.innerHTML = `
+                <span class="product-name">Tên sản phẩm: ${newTast.name}</span>
+                <span class="product-price">Giá sản phẩm: ${newTast.price} VND</span>
+                <button type="button" class="deleteBtn">Xóa sản phẩm</button>
+                <button class="edit-price-btn">Sửa giá</button>
+            `;
+            const deleteBtn = li.querySelector(".deleteBtn");
+            deleteBtn.addEventListener("click", function(){
+            li.remove();
+            });
+            const editBtn = li.querySelector(".edit-price-btn")
+            editBtn.addEventListener("click", function() {
+                let newName = prompt(`Cập nhật tên sản phẩm`,newTast.name);
+                let newPrice = prompt(`Cập nhật giá sản phẩm`,newTast.price);
+                newTast.name = newName;
+                li.querySelector(".product-name").textContent = `Tên sản phẩm: ${newTast.name}`;
+                newTast.price = newPrice;
+                li.querySelector(".product-price").textContent = `Giá sản phẩm: ${newTast.price}`;
+            } )
+            productList.appendChild(li);
+            nameProduct.value = "";
+            priceProduct.value = "";
+        }
+
+        const searchInput = document.getElementById("search-input");
+        searchInput.addEventListener("input", function() {
+            let keyword = searchInput.value.toLowerCase(); // lấy giá trị tìm kiếm, chuyển về chữ thường
+            const items = document.querySelectorAll(".product-item");
+
+            items.forEach(function(item) {
+                let productName = item.querySelector(".product-name").textContent.toLowerCase();
+                if (productName.includes(keyword)) {
+                    item.style.display = ""; // hiển thị
+                } else {
+                    item.style.display = "none"; // ẩn
+                }
+            });
+        });
+        
+    </script>
+</body>
+</html>
