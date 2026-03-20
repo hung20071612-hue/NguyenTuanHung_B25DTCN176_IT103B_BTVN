@@ -1,88 +1,124 @@
-let listTask = [];
-let inputTask = document.getElementById("taskInput");
-let addBtn = document.getElementById("addBtn");
-let taskList = document.getElementById("taskList");
+let todos = [];
 
-addBtn.addEventListener(`click`, createTask);
-inputTask.addEventListener(`keypress`,(e) => {
-    if (e.key === `Enter`)
-        createTask();
-})
-function createTask() {
-    let valueInput = inputTask.value
-    if(valueInput.trim() === ``){
-        alert(`Vui lòng nhập tên công việc!`);
-        return;
-    }
-    let newTask = {
-        id: Date.now(),
-        name: valueInput,
-        status: false
-    }
-    listTask.push(newTask);
-    inputTask.value = ``;
-    inputTask.focus();
-    renderTask();
-}
+const taskInput = document.querySelector("#taskInput");
+const addBtn = document.querySelector("#addBtn");
+const taskList = document.querySelector("#taskList");
+const completedCount = document.querySelector("#completedCount");
+const totalCount = document.querySelector("#totalCount");
 
-function renderTask() {
-    taskList.innerHTML =``;
-    if (listTask.length === 0) {
+function renderTodos () {
+    if (todos.length === 0) {
         taskList.innerHTML = `
-            <div>
-                <div>📋</div>
-                <div>Chưa có công việc nào. Hãy thêm công việc mới!</div>
-            </div>
-        `
-        return;
+        <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-text">
+          Chưa có công việc nào. Hãy thêm công việc mới!
+        </div>
+      </div>
+      `;
+    } else {
+        taskList.innerHTML = todos.map(todo => { 
+          const completed = todo.completed ? "completed" : "";
+          const checked = todo.completed ? "checked" : "";
+
+          const content = todo.isEditing ? `<input class="edit-input" value="${todo.name}">` : `<span class = "task-text" ${completed}>${todo.name}</span>`
+          return `<div class="task-item" ${completed}" data-id="${todo.id}">
+          <input type="checkbox" class="task-checkbox" ${checked}/>
+          
+         ${content}
+          <div class="task-actions">
+            <button class="btn-edit">✏️ Sửa</button>
+            <button class="btn-delete">🗑️ Xóa</button>
+          </div>
+        </div>`
+      }).join("");;
     }
-    listTask.forEach((task) => {
-        let showList = document.createElement(`div`);
-        showList.innerHTML = `
-            <input type="checkbox" class="task-checkbox"/>
-            <span id="task-text-${task.id}">${task.name}</span>
-            <div class="task-actions">
-                <button onclick="updateTask(${task.id})" class="btn-edit">✏️ Sửa</button
-                ><button onclick="deleteTask(${task.id})" class="btn-delete">🗑️ Xóa</button>
-            </div>
-        `;
-        taskList.appendChild(showList);
+    updateFooter();
+}
+
+function updateFooter(){
+  let total = todos.length;
+  let completed = todos.filter(todo => todo.completed).length;
+
+  totalCount.textContent = total;
+  completedCount.textContent = completed;
+}
+
+function addToDo(){
+  const value = taskInput.value.trim();
+  if(value === "") return;
+  let newToDo = {
+    id: Date.now(),
+    name: value,
+    completed: false
+  };
+
+  todos.push(newToDo);
+  taskInput.value = "";
+  renderTodos();
+}
+
+addBtn.addEventListener("click", addToDo);
+taskInput.addEventListener("keydown", (e) => {
+  if(e.key === 'Enter'){
+    addToDo();
+  }
+});
+
+taskList.addEventListener("click", (e) => {
+  e.preventDefault();
+  const taskItem = e.target.closest(".task-item");
+  if(!taskItem) return;
+
+  const id = Number(taskItem.dataset.id);
+
+
+  if(e.target.classList.contains("task-checkbox")){
+    todos = todos.map(todo => {
+      if(id === todo.id){
+        return {...todo, completed: !todo.completed};
+      }
+      return todo;
     });
-}
+    renderTodos();
+  }
 
-function updateTask(id) {
-    let findObject = listTask.find(task => task.id === id)
-    let valueInput = document.getElementById(`task-text-${task.id}`)
-    let newInput = document.createElement(`input`);
-    newInput.type = 'text';
-    newInput.value =  findObject.name
 
-    valueInput.replaceWith(`newInput`)
-    newInput.select();
-    newInput.focus();
-
-    function save() {
-        let newValueInput = newInput.value;
-        if (newValueInput === '') {
-            alert('Tên công việc không được để trống');
-            return;
+  if(e.target.classList.contains("btn-edit")) {
+      todos = todos.map(todo => {
+        if(todo.id === id){
+          return { ...todo, isEditing: true};
         }
-        findObject.name  = newValueInput;
-        renderTask();
+        return todo;
+      });
+      renderTodos();
     }
 
-    newInput.addEventListener('keypress',(e) => {
-        if (e.key ==='Enter') {
-            save();
+
+  if(e.target.classList.contains("btn-delete")) {
+    todos = todos.filter(todo => todo.id !== id);
+    renderTodos();
+  }
+});
+
+
+taskList.addEventListener('keydown', (e) => {
+  if(!e.target.classList.contains("edit-input")) return;
+  if(e.key === "Enter"){
+    const taskItem = e.target.closest(".task-item");
+    const id = +(taskItem.dataset.id);
+    const newName = e.target.value.trim();
+    if(!newName) return;
+      todos = todos.map(todo => {
+        if(todo.id === id){
+          return { ...todo,name: newName,isEditing: false};
         }
-    })
-}
+        return todo;
+      });
+      renderTodos();
+    }
+
+})
 
 
-
-function deleteTask(id) {
-    listTask = listTask.filter(task => task.id !== id);
-    renderTask();
-}
-
-document.addEventListener(`DOMContentLoaded`,renderTask)
+document.addEventListener("DOMContentLoaded",renderTodos());
